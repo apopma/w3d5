@@ -48,8 +48,6 @@ module Associatable
 
   def has_many(name, options = {})
     opts = HasManyOptions.new(name, self.name, options)
-
-
     define_method(name) do
       p_key = self.send(opts.primary_key)
       m_class = opts.model_class
