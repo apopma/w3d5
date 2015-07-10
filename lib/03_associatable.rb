@@ -53,9 +53,6 @@ module Associatable
     define_method(name) do
       p_key = self.send(opts.primary_key)
       m_class = opts.model_class
-
-      p "#{p_key} | #{opts.foreign_key}"
-
       m_class.where({ opts.foreign_key => p_key })
     end
   end
