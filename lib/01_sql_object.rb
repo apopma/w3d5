@@ -95,10 +95,23 @@ class SQLObject
   end
 
   def update
-    # ...
+    setline = self.class.columns.map do |col_name|
+      "#{col_name} = ?" unless col_name == :id
+    end.compact!
+
+    setattrs = attribute_values.drop(1)
+
+    DBConnection.execute(<<-SQL, *setattrs)
+      UPDATE
+        #{self.class.table_name}
+      SET
+        #{setline.join(', ')}
+      WHERE
+        id = #{self.id}
+    SQL
   end
 
   def save
-    # ...
+    id.nil? ? insert : update
   end
 end
