@@ -81,7 +81,17 @@ class SQLObject
   end
 
   def insert
-    # ...
+    col_names = self.class.columns.join(', ')[4..-1] #gets rid of 'id, '
+    question_marks = (['?'] * (self.class.columns.size - 1)).join(', ')
+
+    DBConnection.execute(<<-SQL, *attribute_values)
+      INSERT INTO
+        #{self.class.table_name} (#{col_names})
+      VALUES
+        (#{question_marks})
+    SQL
+
+    self.id = DBConnection.last_insert_row_id
   end
 
   def update
