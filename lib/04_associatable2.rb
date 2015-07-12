@@ -5,20 +5,12 @@ module Associatable
   # Remember to go back to 04_associatable to write ::assoc_options
 
   def has_one_through(name, through_name, source_name)
-    p "RUNNING has_one_through with..."
-    p "name: #{name} | through_name: #{through_name} | source_name: #{source_name}"
-    p "ALL assoc options are: #{assoc_options.inspect}"
-
-    # through_opts is actually the assoc_options for the class of `self`
-    # ::assoc_options returns a hash with the key of class `self`
+    # through_opts is actually the assoc_options for the class of `self`.
+    # ::assoc_options returns a hash with the key of class `self`.
 
     define_method(name) do
       through_opts = self.class.assoc_options[through_name]
       source_opts = through_opts.model_class.assoc_options[source_name]
-
-      puts "== INSIDE method definition `#{name}` =="
-      puts "through_opts: #{through_opts.inspect}"
-      puts "source_opts: #{source_opts.inspect}"
 
       through_table = through_opts.table_name
       join_table = source_opts.class_name.tableize
@@ -29,22 +21,23 @@ module Associatable
       online = "ON #{through_table}.#{source_opts.foreign_key} = #{join_table}.#{source_opts.primary_key}"
       whereline = "WHERE #{through_table}.#{through_opts.primary_key} = #{self.send(through_opts.foreign_key)}"
 
-      p selectline
-      p fromline
-      p joinline
-      p online
-      p whereline
-      p "self: #{self} | #{self.inspect}"
-
-      binds = { select: selectline, from: fromline, where: whereline,
-                join: joinline, on: online }
-
-
-      results = DBConnection.execute(<<-SQL, *binds)
-
+      results = DBConnection.execute(<<-SQL)
+        #{selectline}
+        #{fromline}
+        #{joinline} #{online}
+        #{whereline}
       SQL
 
-      p results
+      # Above SQL query doesn't actually return the source object, but instead,
+      #    a 'through object' having the necessary foreign key to refer to it.
+      #    Calling #send on this object to pull out the key value, along with
+      #    SQLObject#find on this value, gives us our source object.
+
+      through_object = through_opts.class_name.constantize
+                                   .parse_all(results).first
+
+      source_opts.class_name.constantize
+                 .find(through_object.send(source_opts.foreign_key))
     end
 
   end
