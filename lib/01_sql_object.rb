@@ -20,10 +20,7 @@ class SQLObject
   def self.finalize!
     self.columns.each do |column_name|
       define_method("#{column_name}") { attributes[column_name] }
-
-      define_method("#{column_name}=") do |val|
-        attributes[column_name] = val
-      end
+      define_method("#{column_name}=") { |val| attributes[column_name] = val }
     end
   end
 
